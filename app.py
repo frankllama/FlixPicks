@@ -1,11 +1,13 @@
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
+import numpy as np
 import tkinter as tk
 import pandas as pd
 import re
 
 class RecommendationMovie:
     def __init__(self):
-
-        self. movies = pd.read_csv("movies.csv")
+        self.movies = pd.read_csv("movies.csv")
         self.root = tk.Tk()
         self.root.geometry("800x900")
         self.root.title("Movie Recommendation")
@@ -23,28 +25,36 @@ class RecommendationMovie:
         self.recommended_label = tk.Label(self.root, text="", font=('Arial', 15, 'bold'), bg='lightblue')
         self.recommended_label.pack(pady=20)
 
+        self.movies["clean_title"] = self.movies["title"].apply(self.clean_title)
+        self.vectorizer = TfidfVectorizer(ngram_range=(1,2))
+        self.tfidf = self.vectorizer.fit_transform(self.movies["clean_title"])
+
         self.root.mainloop()
 
-    def show_recommended_movie(self):
-        movie_title = self.textBox.get('1.0', tk.END)
-        recommended_movie = f"Recommended Movie: {movie_title.strip()}"
-        self.recommended_label.config(text=recommended_movie)
-    
+    def clean_title(self, title):
+        return re.sub("[^a-zA-Z0-9 ]", "", title)
 
-    
-    def clean_title_movie_from_dataset(self,title):
-         return re.sub("[^a-zA-Z0-9]", "", title)
-    
-    def return_all_clean_movie(self):
-        self.movies["title"] = self.movies["title"].apply(self.clean_title_movie_from_dataset)
-        print(self.movies)
+    def search(self):
+        movie_title = self.textBox.get('1.0', tk.END)
+        title = self.clean_title(movie_title)
+        query_vec = self.vectorizer.transform([title])
+        similarity = cosine_similarity(query_vec, self.tfidf).flatten()
+        indices = np.argpartition(similarity, -5)[-5:]
+        result = self.movies.iloc[indices][::-1]
+        return result
+
+    def show_recommended_movie(self):
+        recommended_movies = self.search()
+        recommended_movie = "Recommended Movies:\n"
+        
+        for movie in recommended_movies['title']:
+            recommended_movie += f"• {movie}\n"
+        
+        self.recommended_label.config(text=recommended_movie)
 
 
 # Instantiate the class and run the Tkinter application
 app = RecommendationMovie()
-
-app.return_all_clean_movie()
-
 
 
 
