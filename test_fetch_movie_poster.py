@@ -4,6 +4,7 @@ import io
 import urllib.parse
 import urllib.request
 import requests
+import re
 
 root = tk.Tk()
 root.geometry('800x800')
@@ -41,7 +42,8 @@ def get_movie_poster(search_movie):
     return image_obj
 
 
-search_movie = "Jack Reacher: Never Go Back"
+search_movie = "Toy Story (1995)"
+search_movie = re.sub("\(.*?\)","",search_movie)
 image_obj_1 = get_movie_poster(search_movie)
 
 label_img_1 = tk.Label(
