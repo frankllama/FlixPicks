@@ -23,6 +23,11 @@ def get_movie_poster(search_movie):
     #search_movie = "Jack Reacher: Never Go Back"
     get_movie_info = requests.get('https://api.themoviedb.org/3/search/movie?query={}&api_key=0445e86644dc5e6dde39ce605f795cd5&language=en-US'.format(search_movie))
     movie_info = get_movie_info.json()
+    #print(movie_info)
+    if movie_info['total_results'] == 0:
+        #Image.new('RGB', (250, 375), color = (0,0,0)).save('Img.jpg')
+        blank_image = ImageTk.PhotoImage(Image.open('Img.jpg'))
+        return blank_image
     # A list of dictionary, results is a list that holds a dictionary. 
     # So get data in first index (0) of key 'id'
     movie_id = movie_info['results'][0]['id']
@@ -42,6 +47,7 @@ def get_movie_poster(search_movie):
     return image_obj
 
 
+# Misspelled on purpose to test if movie is not found.
 search_movie = "Toy Story (1995)"
 search_movie = re.sub("\(.*?\)","",search_movie)
 image_obj_1 = get_movie_poster(search_movie)
