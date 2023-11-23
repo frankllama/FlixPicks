@@ -48,7 +48,8 @@ def get_movie_poster(search_movie):
 
 
 # Misspelled on purpose to test if movie is not found.
-search_movie = "Toy Story (1995)"
+# search_movie = "Toy Stoy (1995)"
+search_movie = "Jack Reacher: Never Go Back"
 search_movie = re.sub("\(.*?\)","",search_movie)
 image_obj_1 = get_movie_poster(search_movie)
 
