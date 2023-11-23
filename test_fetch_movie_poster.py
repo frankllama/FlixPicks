@@ -34,7 +34,10 @@ def get_movie_poster(search_movie):
 
     raw_data = urllib.request.urlopen(movie_poster).read()
 
-    image_obj = ImageTk.PhotoImage(Image.open(io.BytesIO(raw_data)))
+    #image_obj = ImageTk.PhotoImage(Image.open(io.BytesIO(raw_data)))
+    # Original movie poster size is 500x750 pixels, so just halved it.
+    image_obj = ImageTk.PhotoImage(Image.open(io.BytesIO(raw_data)).resize((250,375)))
+
     return image_obj
 
 
