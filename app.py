@@ -1,39 +1,66 @@
 # Import necessary libraries and modules
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
+from PIL import ImageTk, Image 
+from tkinter import ttk
 import numpy as np
 import tkinter as tk
 import pandas as pd
 import re
+
 
 # Define a class for movie recommendations
 class RecommendationMovie:
     def __init__(self):
         # Initialize the class by reading movie and ratings data, and creating the Tkinter window
         self.movies = pd.read_csv("movies.csv")
-        self.ratings = pd.read_csv("ratings.csv")
         self.root = tk.Tk()
-        self.root.geometry("800x900")
+        self.root.geometry("1200x1200")
         self.root.title("Movie Recommendation")
-        self.root.configure(bg='lightblue')
 
-        # Create and pack Tkinter widgets (Label, Text, Button, and Label)
-        self.label = tk.Label(self.root, text="Type Movie", font=('Arial', 30, 'bold'), bg='lightblue')
-        self.label.pack(padx=20, pady=30)
+        # Set dark gray background color
+        self.root.configure(bg='#222222')
 
-        self.textBox = tk.Text(self.root, height=2, font=('Arial', 15, 'bold'))
-        self.textBox.pack(padx=50, pady=30)
+        # Create and pack Tkinter widgets (Canvas, Frame, Label, Text, Button, Scrollbar)
+        self.canvas = tk.Canvas(self.root, bg='#222222', highlightthickness=0)
+        self.frame = ttk.Frame(self.canvas)  # Use ttk for themed widgets
 
-        self.button = tk.Button(self.root, text="Find Recommended Movie", font=('Arial', 20, 'bold'), command=self.show_recommended_movie)
-        self.button.pack()
+        self.scrollbar = ttk.Scrollbar(self.root, orient="vertical", command=self.canvas.yview)
+        self.canvas.configure(yscrollcommand=self.scrollbar.set)
 
-        self.recommended_label = tk.Label(self.root, text="", font=('Arial', 15, 'bold'), bg='lightblue')
+        self.scrollbar.pack(side="right", fill="y")
+        self.canvas.pack(side="left", fill="both", expand=True)
+        self.canvas.create_window((0, 0), window=self.frame, anchor="nw")
+
+        path = "disney.jpg"
+        img = Image.open(path)
+        self.img = ImageTk.PhotoImage(img)
+
+        self.canvas.create_image(0, 0, anchor=tk.NW, image=self.img)
+
+        # Set title label in the middle with transparent background
+        self.label = tk.Label(self.frame, text="FlixPicks", font=('Arial', 60, 'bold', 'italic'), fg='Gold', bg='#222222', bd=0, highlightthickness=0)
+        self.label.pack(side=tk.TOP, pady=(100, 0))
+
+        # Set search box in the middle with no background
+        self.textBox = tk.Text(self.frame, height=2, font=('Arial', 15, 'bold'), bg='#aaaaaa', fg='black')
+        self.textBox.pack(side=tk.TOP, pady=10)
+        self.textBox.config(highlightbackground='#aaaaaa', bd=0, insertbackground='gray')
+
+        self.button = tk.Button(self.frame, text="Recommend Movie", font=('Arial', 20, 'bold'), command=self.show_recommended_movie, bg='#555555', fg='white')
+        self.button.pack(side=tk.TOP, pady=10)
+
+        self.recommended_label = tk.Label(self.frame, text="", font=('Arial', 15, 'bold'), fg='white')
         self.recommended_label.pack(pady=20)
 
         # Preprocess movie titles for text similarity
         self.movies["clean_title"] = self.movies["title"].apply(self.clean_title)
-        self.vectorizer = TfidfVectorizer(ngram_range=(1,2))
+        self.vectorizer = TfidfVectorizer(ngram_range=(1, 2))
         self.tfidf = self.vectorizer.fit_transform(self.movies["clean_title"])
+
+        # Configure the canvas to update scroll region
+        self.frame.update_idletasks()
+        self.canvas.configure(scrollregion=self.canvas.bbox("all"))
 
         # Start Tkinter main event loop
         self.root.mainloop()
@@ -41,6 +68,15 @@ class RecommendationMovie:
     def clean_title(self, title):
         # Clean movie titles by removing non-alphanumeric characters
         return re.sub("[^a-zA-Z0-9 ]", "", title)
+
+    def on_configure(self, event):
+        # Update scroll region when canvas size changes
+        self.canvas.configure(scrollregion=self.canvas.bbox("all"))
+
+    def on_mousewheel(self, event):
+        # Handle mouse wheel scrolling
+        self.canvas.yview_scroll(-1 * int(event.delta / 120), "units")
+
 
     def search(self):
         # Perform movie search based on user input
