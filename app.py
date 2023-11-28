@@ -17,6 +17,7 @@ class RecommendationMovie:
         self.root = tk.Tk()
         self.root.geometry("1200x1200")
         self.root.title("Movie Recommendation")
+        self.ratings = pd.read_csv("ratings.csv")
 
         # Set dark gray background color
         self.root.configure(bg='#222222')
