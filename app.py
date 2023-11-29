@@ -54,16 +54,23 @@ class RecommendationMovie:
         self.button.pack(side=tk.TOP, pady=10)
 
         self.recommended_label = tk.Label(self.frame, text="", font=('Arial', 15, 'bold'), fg='black')
-        self.recommended_label.pack(pady=20)
+        self.recommended_label.pack(side=tk.TOP, pady=20)
+
+        # Add a separator frame with a background color as a line
+        separator_frame = tk.Frame(self.frame, height=2, bg='white')
+        separator_frame.pack(side=tk.TOP, fill=tk.X)
 
         self.recommended_label2 = tk.Label(self.frame, text="", font=('Arial', 15, 'bold'), fg='black')
-        self.recommended_label2.pack(pady=20)
+        self.recommended_label2.pack(side=tk.BOTTOM, pady=20)
+
+
 
         # Preprocess movie titles for text similarity
         self.movies["clean_title"] = self.movies["title"].apply(self.clean_title)
         self.vectorizer = TfidfVectorizer(ngram_range=(1, 2))
         self.tfidf = self.vectorizer.fit_transform(self.movies["clean_title"])
 
+        self.movie_title = self.textBox.get('1.0', tk.END)
         # Configure the canvas to update scroll region
         self.frame.update_idletasks()
         self.canvas.configure(scrollregion=self.canvas.bbox("all"))
@@ -88,10 +95,12 @@ class RecommendationMovie:
 
     def search(self):
         # Perform movie search based on user input
-        global movie_title 
-        movie_title = self.textBox.get('1.0', tk.END)
-        print(movie_title)
-        title = self.clean_title(movie_title)
+      
+        #movie_title = self.textBox.get('1.0', tk.END)
+        self.movie_title = self.textBox.get('1.0', tk.END).strip()  # Strip to remove leading/trailing whitespaces
+
+      
+        title = self.clean_title(self.movie_title)
         query_vec = self.vectorizer.transform([title])
         similarity = cosine_similarity(query_vec, self.tfidf).flatten()
         indices = np.argpartition(similarity, -5)[-5:]
@@ -128,7 +137,7 @@ class RecommendationMovie:
         # input_title = "Breaking Bad"
         # print(input_title)
         # Check if the entered title is in the dataset
-        input_title = movie_title
+        input_title = self.movie_title
         if input_title not in df['title'].values:
             print("Movie title not found in the dataset.")
         else:
@@ -165,12 +174,12 @@ class RecommendationMovie:
                 
             print(netflix_movies)
             return netflix_movies
+# ... (previous code)
 
     def show_recommended_movie(self):
         # Display recommended movies in the Tkinter label
-        # movie_title = "Breaking Bad"
         recommended_movies = self.search()
-        recommended_movie = "Recommended Movies:\n"
+        recommended_movie = "Recommended by system using collaboraHve:\n"
 
         movie_id = recommended_movies.iloc[0]["movieId"]
 
@@ -180,12 +189,26 @@ class RecommendationMovie:
 
         self.recommended_label.config(text=recommended_movie)
 
-        netflix_movies = " "
+        netflix_movies = "Recommended by content-based filtering:\n"
         netflix_list = self.reccomend_movie()
-        for i in netflix_list:
-            netflix_movies += i
-        
+        if netflix_list is not None:
+            for i in netflix_list:
+                netflix_movies += i + "\n"
+                
+
         self.recommended_label2.config(text=netflix_movies)
+
+# ... (rest of the code)
+
+
+
+
+        #netflix_movies = " "
+        #netflix_list = self.reccomend_movie()
+        #for i in netflix_list:
+        #    netflix_movies += i
+        
+       # self.recommended_label2.config(text=netflix_movies)
 
     def find_similar_movies(self, movie_id):
         # Calculate movie recommendations based on user ratings and return a DataFrame with scores, titles, and genres
@@ -211,6 +234,12 @@ class RecommendationMovie:
 
 # Instantiate the class and run the Tkinter application
 app = RecommendationMovie()
+
+
+
+
+
+
 
 
 
