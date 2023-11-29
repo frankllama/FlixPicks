@@ -1,13 +1,14 @@
 # Import necessary libraries and modules
-from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.feature_extraction.text import TfidfVectorizer # need for both algorithms
 from sklearn.metrics.pairwise import cosine_similarity
 from PIL import ImageTk, Image 
 from tkinter import ttk
 import numpy as np
 import tkinter as tk
-import pandas as pd
+import pandas as pd # needed for both algorithms
 import re
 
+from sklearn.metrics.pairwise import linear_kernel 
 
 # Define a class for movie recommendations
 class RecommendationMovie:
@@ -18,6 +19,7 @@ class RecommendationMovie:
         self.root.geometry("1200x1200")
         self.root.title("Movie Recommendation")
         self.ratings = pd.read_csv("ratings.csv")
+
 
         # Set dark gray background color
         self.root.configure(bg='#222222')
@@ -54,6 +56,9 @@ class RecommendationMovie:
         self.recommended_label = tk.Label(self.frame, text="", font=('Arial', 15, 'bold'), fg='white')
         self.recommended_label.pack(pady=20)
 
+        self.recommended_label2 = tk.Label(self.frame, text="", font=('Arial', 15, 'bold'), fg='white')
+        self.recommended_label2.pack(pady=20)
+
         # Preprocess movie titles for text similarity
         self.movies["clean_title"] = self.movies["title"].apply(self.clean_title)
         self.vectorizer = TfidfVectorizer(ngram_range=(1, 2))
@@ -62,6 +67,8 @@ class RecommendationMovie:
         # Configure the canvas to update scroll region
         self.frame.update_idletasks()
         self.canvas.configure(scrollregion=self.canvas.bbox("all"))
+
+        
 
         # Start Tkinter main event loop
         self.root.mainloop()
@@ -81,7 +88,9 @@ class RecommendationMovie:
 
     def search(self):
         # Perform movie search based on user input
+        global movie_title 
         movie_title = self.textBox.get('1.0', tk.END)
+        print(movie_title)
         title = self.clean_title(movie_title)
         query_vec = self.vectorizer.transform([title])
         similarity = cosine_similarity(query_vec, self.tfidf).flatten()
@@ -89,8 +98,77 @@ class RecommendationMovie:
         result = self.movies.iloc[indices][::-1]
         return result
 
+    def reccomend_movie(self):
+        df = pd.read_csv("netflix.csv")
+        # Fills in empty values with a space
+        df = df.fillna('')
+
+        # Combines all attributes into a single dataframe
+        df['Combined_Info'] = (
+            df['genres'] + ' ' +
+            df['description'] + ' ' +
+            df['director'] + ' ' +
+            df['cast'] + ' ' +
+            df['country'] + ' ' +
+            df['rating']
+        )
+
+        # Create a TF-IDF vectorizer for genre 
+        # Stop words are common words like: the or are (We don't want to count those bc they don't contribute to the plot comparison)
+        genre_vectorizer = TfidfVectorizer(stop_words='english')
+        genre_tfidf_matrix = genre_vectorizer.fit_transform(df['genres'])
+
+        # Create a TF-IDF vectorizer for the combined info
+        combined_info_vectorizer = TfidfVectorizer(stop_words='english')
+        combined_info_tfidf_matrix = combined_info_vectorizer.fit_transform(df['Combined_Info'])
+
+
+        # Prompt user for a movie title
+        # input_title = self.textBox.get('1.0', tk.END)
+        # input_title = "Breaking Bad"
+        # print(input_title)
+        # Check if the entered title is in the dataset
+        input_title = movie_title
+        if input_title not in df['title'].values:
+            print("Movie title not found in the dataset.")
+        else:
+        
+            # Get the genre and combined info of the input title
+            input_genre = df[df['title'] == input_title]['genres'].iloc[0]
+            input_combined_info = df[df['title'] == input_title]['Combined_Info'].iloc[0]
+
+            # Transform the input genre and combined info using the respective TF-IDF vectorizers
+            input_genre_tfidf = genre_vectorizer.transform([input_genre])
+            input_combined_info_tfidf = combined_info_vectorizer.transform([input_combined_info])
+
+            # Calculate the cosine similarities
+            genre_cosine_similarities = linear_kernel(input_genre_tfidf, genre_tfidf_matrix).flatten()
+            combined_info_cosine_similarities = linear_kernel(input_combined_info_tfidf, combined_info_tfidf_matrix).flatten()
+
+            # Combine the similarities with a weight for the genre
+            weight_genre = 0.7 
+            weighted_cosine_similarities = weight_genre * genre_cosine_similarities + (1 - weight_genre) * combined_info_cosine_similarities
+
+            # Get the indices of movies with the highest similarity
+            similar_movies = weighted_cosine_similarities.argsort()[:-1][::-1]  # Exclude the input movie itself
+
+            # creates empty list to put the reccomended movies in
+            netflix_movies = []
+
+            # Print recommended movies
+            print("\nRecommended Movies:")
+            for i in similar_movies[:5]:  # Print the top 5 recommended movies
+                print(f"{df['title'].iloc[i]} - Genre: {df['genres'].iloc[i]} Similarity: {weighted_cosine_similarities[i]:.2f}")
+
+                # puts movies in a list
+                netflix_movies.append(df['title'].iloc[i])
+                
+            print(netflix_movies)
+            return netflix_movies
+
     def show_recommended_movie(self):
         # Display recommended movies in the Tkinter label
+        # movie_title = "Breaking Bad"
         recommended_movies = self.search()
         recommended_movie = "Recommended Movies:\n"
 
@@ -101,6 +179,13 @@ class RecommendationMovie:
             recommended_movie += f"• {movie['title']} - Genre: {movie['genres']}\n"
 
         self.recommended_label.config(text=recommended_movie)
+
+        netflix_movies = " "
+        netflix_list = self.reccomend_movie()
+        for i in netflix_list:
+            netflix_movies += i
+        
+        self.recommended_label2.config(text=netflix_movies)
 
     def find_similar_movies(self, movie_id):
         # Calculate movie recommendations based on user ratings and return a DataFrame with scores, titles, and genres
@@ -122,6 +207,7 @@ class RecommendationMovie:
 
         # Merge with movie data and return top 10 recommendations with scores, titles, and genres
         return rec_percentages.head(10).merge(self.movies, left_index=True, right_on="movieId")[["score","title","genres"]]
+    
 
 # Instantiate the class and run the Tkinter application
 app = RecommendationMovie()
