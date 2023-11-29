@@ -53,10 +53,10 @@ class RecommendationMovie:
         self.button = tk.Button(self.frame, text="Recommend Movie", font=('Arial', 20, 'bold'), command=self.show_recommended_movie, bg='#555555', fg='white')
         self.button.pack(side=tk.TOP, pady=10)
 
-        self.recommended_label = tk.Label(self.frame, text="", font=('Arial', 15, 'bold'), fg='white')
+        self.recommended_label = tk.Label(self.frame, text="", font=('Arial', 15, 'bold'), fg='black')
         self.recommended_label.pack(pady=20)
 
-        self.recommended_label2 = tk.Label(self.frame, text="", font=('Arial', 15, 'bold'), fg='white')
+        self.recommended_label2 = tk.Label(self.frame, text="", font=('Arial', 15, 'bold'), fg='black')
         self.recommended_label2.pack(pady=20)
 
         # Preprocess movie titles for text similarity
