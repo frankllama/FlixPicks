@@ -7,6 +7,10 @@ import numpy as np
 import tkinter as tk
 import pandas as pd # needed for both algorithms
 import re
+import io
+import urllib.parse
+import urllib.request
+import requests
 
 from sklearn.metrics.pairwise import linear_kernel 
 
@@ -63,7 +67,8 @@ class RecommendationMovie:
         self.recommended_label2 = tk.Label(self.frame, text="", font=('Arial', 15, 'bold'), fg='black')
         self.recommended_label2.pack(side=tk.BOTTOM, pady=20)
 
-
+        self.movie_poster_label = tk.Label(self.frame, image="", bg='WHITE')
+        self.movie_poster_label.pack(side=tk.BOTTOM)
 
         # Preprocess movie titles for text similarity
         self.movies["clean_title"] = self.movies["title"].apply(self.clean_title)
@@ -106,6 +111,35 @@ class RecommendationMovie:
         indices = np.argpartition(similarity, -5)[-5:]
         result = self.movies.iloc[indices][::-1]
         return result
+
+    def get_movie_poster(self, search_movie):
+        # Get movie id from searching a movie
+        #movie_id = 343611
+        #search_movie = "Jack Reacher: Never Go Back"
+        get_movie_info = requests.get('https://api.themoviedb.org/3/search/movie?query={}&api_key=0445e86644dc5e6dde39ce605f795cd5&language=en-US'.format(search_movie))
+        movie_info = get_movie_info.json()
+        #print(movie_info)
+        if movie_info['total_results'] == 0:
+            #Image.new('RGB', (250, 375), color = (0,0,0)).save('Img.jpg')
+            blank_image = ImageTk.PhotoImage(Image.open('Img.jpg'))
+            return blank_image
+        # A list of dictionary, results is a list that holds a dictionary. 
+        # So get data in first index (0) of key 'id'
+        movie_id = movie_info['results'][0]['id']
+        #print(movie_id)
+
+        # Get movie poster path from it's id with the tmdb api.
+        response = requests.get('https://api.themoviedb.org/3/movie/{}?api_key=0445e86644dc5e6dde39ce605f795cd5&language=en-US'.format(movie_id))
+        data = response.json()
+        movie_poster = "https://image.tmdb.org/t/p/w500/" + data['poster_path']
+
+        raw_data = urllib.request.urlopen(movie_poster).read()
+
+        #image_obj = ImageTk.PhotoImage(Image.open(io.BytesIO(raw_data)))
+        # Original movie poster size is 500x750 pixels, so just halved it.
+        image_obj = ImageTk.PhotoImage(Image.open(io.BytesIO(raw_data)).resize((250,375)))
+
+        return image_obj
 
     def reccomend_movie(self):
         df = pd.read_csv("netflix.csv")
@@ -173,6 +207,18 @@ class RecommendationMovie:
                 netflix_movies.append(df['title'].iloc[i])
                 
             print(netflix_movies)
+            #search_movie = re.sub("\(.*?\)","",search_movie)
+            #image_obj_0 = self.get_movie_poster(netflix_movies[0])
+
+            # label_img_0 = tk.Label(
+            #     self.frame,
+            #     image=image_obj_0,
+            #     bg='WHITE',
+            #     padx=2,
+            # )
+
+            #label_img_0.grid(row=0)
+
             return netflix_movies
 # ... (previous code)
 
@@ -197,6 +243,12 @@ class RecommendationMovie:
                 
 
         self.recommended_label2.config(text=netflix_movies)
+        
+        print(netflix_list[0])
+        image_obj_0 = self.get_movie_poster(netflix_list[0])
+        self.movie_poster_label.image = image_obj_0 # Anchor the image object into the widget.
+        self.movie_poster_label.config(image=image_obj_0)
+
 
 # ... (rest of the code)
 
