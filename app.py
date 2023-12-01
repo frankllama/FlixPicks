@@ -243,10 +243,15 @@ class RecommendationMovie:
                 
         self.recommended_label2.config(text=netflix_movies)
         
-        print(netflix_list[0])
-        image_obj_0 = self.get_movie_poster(netflix_list[0])
-        self.movie_poster_label.image = image_obj_0 # Anchor the image object into the widget.
-        self.movie_poster_label.config(image=image_obj_0)
+        #print(netflix_list[0])
+        if netflix_list is not None:
+            image_obj_0 = self.get_movie_poster(netflix_list[0])
+            self.movie_poster_label.image = image_obj_0 # Anchor the image object into the widget.
+            self.movie_poster_label.config(image=image_obj_0)
+        else:
+            blank_image = ImageTk.PhotoImage(Image.open('Img.jpg'))
+            self.movie_poster_label.image = blank_image
+            self.movie_poster_label.config(image=blank_image)
 # ... (rest of the code)
         #netflix_movies = " "
         #netflix_list = self.reccomend_movie()
