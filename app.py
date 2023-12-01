@@ -1,6 +1,7 @@
 # Import necessary libraries and modules
 from sklearn.feature_extraction.text import TfidfVectorizer # need for both algorithms
 from sklearn.metrics.pairwise import cosine_similarity
+from sklearn.metrics.pairwise import linear_kernel 
 from PIL import ImageTk, Image 
 from tkinter import ttk
 import numpy as np
@@ -12,7 +13,6 @@ import urllib.parse
 import urllib.request
 import requests
 
-from sklearn.metrics.pairwise import linear_kernel 
 
 # Define a class for movie recommendations
 class RecommendationMovie:
@@ -23,7 +23,6 @@ class RecommendationMovie:
         self.root.geometry("1200x1200")
         self.root.title("Movie Recommendation")
         self.ratings = pd.read_csv("ratings.csv")
-
 
         # Set dark gray background color
         self.root.configure(bg='#222222')
@@ -67,6 +66,7 @@ class RecommendationMovie:
         self.recommended_label2 = tk.Label(self.frame, text="", font=('Arial', 15, 'bold'), fg='black')
         self.recommended_label2.pack(side=tk.BOTTOM, pady=20)
 
+        # Create a label for displaying the movie posters.
         self.movie_poster_label = tk.Label(self.frame, image="", bg='WHITE')
         self.movie_poster_label.pack(side=tk.BOTTOM)
 
@@ -79,19 +79,20 @@ class RecommendationMovie:
         # Configure the canvas to update scroll region
         self.frame.update_idletasks()
         self.canvas.configure(scrollregion=self.canvas.bbox("all"))
-
         
-
         # Start Tkinter main event loop
         self.root.mainloop()
+
 
     def clean_title(self, title):
         # Clean movie titles by removing non-alphanumeric characters
         return re.sub("[^a-zA-Z0-9 ]", "", title)
 
+
     def on_configure(self, event):
         # Update scroll region when canvas size changes
         self.canvas.configure(scrollregion=self.canvas.bbox("all"))
+
 
     def on_mousewheel(self, event):
         # Handle mouse wheel scrolling
@@ -100,10 +101,8 @@ class RecommendationMovie:
 
     def search(self):
         # Perform movie search based on user input
-      
         #movie_title = self.textBox.get('1.0', tk.END)
         self.movie_title = self.textBox.get('1.0', tk.END).strip()  # Strip to remove leading/trailing whitespaces
-
       
         title = self.clean_title(self.movie_title)
         query_vec = self.vectorizer.transform([title])
@@ -111,6 +110,7 @@ class RecommendationMovie:
         indices = np.argpartition(similarity, -5)[-5:]
         result = self.movies.iloc[indices][::-1]
         return result
+
 
     def get_movie_poster(self, search_movie):
         # Get movie id from searching a movie
@@ -141,6 +141,7 @@ class RecommendationMovie:
 
         return image_obj
 
+
     def reccomend_movie(self):
         df = pd.read_csv("netflix.csv")
         # Fills in empty values with a space
@@ -165,7 +166,6 @@ class RecommendationMovie:
         combined_info_vectorizer = TfidfVectorizer(stop_words='english')
         combined_info_tfidf_matrix = combined_info_vectorizer.fit_transform(df['Combined_Info'])
 
-
         # Prompt user for a movie title
         # input_title = self.textBox.get('1.0', tk.END)
         # input_title = "Breaking Bad"
@@ -175,7 +175,6 @@ class RecommendationMovie:
         if input_title not in df['title'].values:
             print("Movie title not found in the dataset.")
         else:
-        
             # Get the genre and combined info of the input title
             input_genre = df[df['title'] == input_title]['genres'].iloc[0]
             input_combined_info = df[df['title'] == input_title]['Combined_Info'].iloc[0]
@@ -222,6 +221,7 @@ class RecommendationMovie:
             return netflix_movies
 # ... (previous code)
 
+
     def show_recommended_movie(self):
         # Display recommended movies in the Tkinter label
         recommended_movies = self.search()
@@ -241,26 +241,20 @@ class RecommendationMovie:
             for i in netflix_list:
                 netflix_movies += i + "\n"
                 
-
         self.recommended_label2.config(text=netflix_movies)
         
         print(netflix_list[0])
         image_obj_0 = self.get_movie_poster(netflix_list[0])
         self.movie_poster_label.image = image_obj_0 # Anchor the image object into the widget.
         self.movie_poster_label.config(image=image_obj_0)
-
-
 # ... (rest of the code)
-
-
-
-
         #netflix_movies = " "
         #netflix_list = self.reccomend_movie()
         #for i in netflix_list:
         #    netflix_movies += i
         
        # self.recommended_label2.config(text=netflix_movies)
+
 
     def find_similar_movies(self, movie_id):
         # Calculate movie recommendations based on user ratings and return a DataFrame with scores, titles, and genres
@@ -284,23 +278,8 @@ class RecommendationMovie:
         return rec_percentages.head(10).merge(self.movies, left_index=True, right_on="movieId")[["score","title","genres"]]
     
 
-# Instantiate the class and run the Tkinter application
-app = RecommendationMovie()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+if __name__ == "__main__":
+    # Instantiate the class and run the Tkinter application
+    app = RecommendationMovie()
 
 
