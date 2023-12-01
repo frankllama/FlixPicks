@@ -59,6 +59,10 @@ class RecommendationMovie:
         self.recommended_label = tk.Label(self.frame, text="", font=('Arial', 15, 'bold'), fg='black')
         self.recommended_label.pack(side=tk.TOP, pady=20)
 
+        # Create labels for regular movie posters.
+        self.r_movie_poster_label_0 = tk.Label(self.frame, image="", bg='WHITE')
+        self.r_movie_poster_label_0.pack()
+
         # Add a separator frame with a background color as a line
         separator_frame = tk.Frame(self.frame, height=2, bg='white')
         separator_frame.pack(side=tk.TOP, fill=tk.X)
@@ -66,9 +70,9 @@ class RecommendationMovie:
         self.recommended_label2 = tk.Label(self.frame, text="", font=('Arial', 15, 'bold'), fg='black')
         self.recommended_label2.pack(side=tk.BOTTOM, pady=20)
 
-        # Create a label for displaying the movie posters.
-        self.movie_poster_label = tk.Label(self.frame, image="", bg='WHITE')
-        self.movie_poster_label.pack(side=tk.BOTTOM)
+        # Create labels for displaying the netflix movie posters.
+        self.n_movie_poster_label_0 = tk.Label(self.frame, image="", bg='WHITE')
+        self.n_movie_poster_label_0.pack()
 
         # Preprocess movie titles for text similarity
         self.movies["clean_title"] = self.movies["title"].apply(self.clean_title)
@@ -228,12 +232,24 @@ class RecommendationMovie:
         recommended_movie = "Recommended by system using collaboraHve:\n"
 
         movie_id = recommended_movies.iloc[0]["movieId"]
+        
+        clean_recommended_movies_list = []
 
         # Iterate through similar movies and display titles and genres
         for _, movie in self.find_similar_movies(movie_id).iterrows():
             recommended_movie += f"• {movie['title']} - Genre: {movie['genres']}\n"
+            clean_recommended_movies_list.append(re.sub("\(.*?\)","", movie['title']))
 
         self.recommended_label.config(text=recommended_movie)
+
+        if clean_recommended_movies_list is not None:
+            rmc_image_obj_0 = self.get_movie_poster(clean_recommended_movies_list[0])
+            self.r_movie_poster_label_0.image = rmc_image_obj_0 # Anchor the image object into the widget.
+            self.r_movie_poster_label_0.config(image=rmc_image_obj_0)
+        else:
+            blank_image = ImageTk.PhotoImage(Image.open('Img.jpg'))
+            self.r_movie_poster_label_0.image = blank_image
+            self.r_movie_poster_label_0.config(image=blank_image)
 
         netflix_movies = "Recommended by content-based filtering:\n"
         netflix_list = self.reccomend_movie()
@@ -246,12 +262,12 @@ class RecommendationMovie:
         #print(netflix_list[0])
         if netflix_list is not None:
             image_obj_0 = self.get_movie_poster(netflix_list[0])
-            self.movie_poster_label.image = image_obj_0 # Anchor the image object into the widget.
-            self.movie_poster_label.config(image=image_obj_0)
+            self.n_movie_poster_label_0.image = image_obj_0 # Anchor the image object into the widget.
+            self.n_movie_poster_label_0.config(image=image_obj_0)
         else:
             blank_image = ImageTk.PhotoImage(Image.open('Img.jpg'))
-            self.movie_poster_label.image = blank_image
-            self.movie_poster_label.config(image=blank_image)
+            self.n_movie_poster_label_0.image = blank_image
+            self.n_movie_poster_label_0.config(image=blank_image)
 # ... (rest of the code)
         #netflix_movies = " "
         #netflix_list = self.reccomend_movie()
