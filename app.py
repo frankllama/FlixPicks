@@ -13,9 +13,8 @@ import urllib.parse
 import urllib.request
 import requests
 
-
 # Define a class for movie recommendations
-class RecommendationMovie:
+class RecommendationMovie: 
     def __init__(self):
         # Initialize the class by reading movie and ratings data, and creating the Tkinter window
         self.movies = pd.read_csv("movies.csv")
@@ -32,9 +31,11 @@ class RecommendationMovie:
         self.frame = ttk.Frame(self.canvas)  # Use ttk for themed widgets
 
         self.scrollbar = ttk.Scrollbar(self.root, orient="vertical", command=self.canvas.yview)
-        self.canvas.configure(yscrollcommand=self.scrollbar.set)
+        self.h_scrollbar = ttk.Scrollbar(self.root, orient="horizontal", command=self.canvas.xview)
+        self.canvas.configure(yscrollcommand=self.scrollbar.set, xscrollcommand=self.h_scrollbar.set)
 
         self.scrollbar.pack(side="right", fill="y")
+        self.h_scrollbar.pack(side="bottom", fill="x")
         self.canvas.pack(side="left", fill="both", expand=True)
         self.canvas.create_window((0, 0), window=self.frame, anchor="nw")
 
@@ -64,7 +65,7 @@ class RecommendationMovie:
         self.r_movie_poster_label_0.pack()
 
         # Add a separator frame with a background color as a line
-        separator_frame = tk.Frame(self.frame, height=2, bg='white')
+        separator_frame = tk.Frame(self.frame, height=2, bg='black')
         separator_frame.pack(side=tk.TOP, fill=tk.X)
 
         self.recommended_label2 = tk.Label(self.frame, text="", font=('Arial', 15, 'bold'), fg='black')
@@ -80,6 +81,7 @@ class RecommendationMovie:
         self.tfidf = self.vectorizer.fit_transform(self.movies["clean_title"])
 
         self.movie_title = self.textBox.get('1.0', tk.END)
+
         # Configure the canvas to update scroll region
         self.frame.update_idletasks()
         self.canvas.configure(scrollregion=self.canvas.bbox("all"))
@@ -242,7 +244,7 @@ class RecommendationMovie:
 
         self.recommended_label.config(text=recommended_movie)
 
-        if clean_recommended_movies_list is not None:
+        '''if clean_recommended_movies_list is not None:
             rmc_image_obj_0 = self.get_movie_poster(clean_recommended_movies_list[0])
             self.r_movie_poster_label_0.image = rmc_image_obj_0 # Anchor the image object into the widget.
             self.r_movie_poster_label_0.config(image=rmc_image_obj_0)
@@ -250,6 +252,7 @@ class RecommendationMovie:
             blank_image = ImageTk.PhotoImage(Image.open('Img.jpg'))
             self.r_movie_poster_label_0.image = blank_image
             self.r_movie_poster_label_0.config(image=blank_image)
+        '''
 
         netflix_movies = "Recommended by content-based filtering:\n"
         netflix_list = self.reccomend_movie()
@@ -258,7 +261,32 @@ class RecommendationMovie:
                 netflix_movies += i + "\n"
                 
         self.recommended_label2.config(text=netflix_movies)
-        
+    
+        # Rearranging the gallery frame
+        gallery_frame = ttk.Frame(self.frame)
+        gallery_frame.pack(side=tk.TOP, pady=10)
+
+        # Function to add images to the gallery
+        def add_image(clean_recommended_movies_list):
+            if clean_recommended_movies_list is not None:
+                image = self.get_movie_poster(clean_recommended_movies_list)
+                label = ttk.Label(gallery_frame, image=image)
+                label.image = image
+                label.pack(side=tk.LEFT, padx=10)
+            else:
+                blank_image = ImageTk.PhotoImage(Image.open('Img.jpg'))
+                label = ttk.Label(gallery_frame, image=blank_image)
+                label.image = blank_image
+                label.config(image=blank_image)
+                label.pack(side=tk.LEFT, padx=10)
+            
+        # Add images to the gallery
+        for item in clean_recommended_movies_list:
+            add_image(item)
+
+        # gallery_frame.bind("<Configure>", configure_scroll_region)
+        # self.canvas.bind_all("<MouseWheel>", on_mousewheel)
+
         #print(netflix_list[0])
         if netflix_list is not None:
             image_obj_0 = self.get_movie_poster(netflix_list[0])
@@ -276,6 +304,28 @@ class RecommendationMovie:
         
        # self.recommended_label2.config(text=netflix_movies)
 
+        # Rearranging the gallery frame for netflix movies
+        n_gallery_frame = ttk.Frame(self.frame)
+        n_gallery_frame.pack(side=tk.TOP, pady=10)
+
+        # Function to add images to the gallery
+        def n_add_image(netflix_list):
+            if netflix_list is not None:
+                image = self.get_movie_poster(netflix_list)
+                label = ttk.Label(n_gallery_frame, image=image)
+                label.image = image
+                label.pack(side=tk.LEFT, padx=10)
+            else:
+                blank_image = ImageTk.PhotoImage(Image.open('Img.jpg'))
+                label = ttk.Label(n_gallery_frame, image=blank_image)
+                label.image = blank_image
+                label.config(image=blank_image)
+                label.pack(side=tk.LEFT, padx=10)
+            
+        # Add images to the gallery
+        for item in netflix_list:
+            n_add_image(item)
+        
 
     def find_similar_movies(self, movie_id):
         # Calculate movie recommendations based on user ratings and return a DataFrame with scores, titles, and genres
