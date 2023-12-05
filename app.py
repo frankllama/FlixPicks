@@ -58,7 +58,7 @@ class RecommendationMovie:
         self.button.pack(side=tk.TOP, pady=10)
 
         self.recommended_label = tk.Label(self.frame, text="", font=('Arial', 15, 'bold'), fg='black')
-        self.recommended_label.pack(side=tk.TOP, pady=20)
+        self.recommended_label.pack(side=tk.TOP, pady=10)
 
         # Create labels for regular movie posters.
         #self.r_movie_poster_label_0 = tk.Label(self.frame, image="", bg='WHITE')
@@ -71,7 +71,7 @@ class RecommendationMovie:
         separator_frame.pack(side=tk.TOP, fill=tk.X)
 
         self.recommended_label2 = tk.Label(self.frame, text="", font=('Arial', 15, 'bold'), fg='black')
-        self.recommended_label2.pack(pady=20)
+        self.recommended_label2.pack(pady=10)
 
         # Create labels for displaying the netflix movie posters.
         #self.n_movie_poster_label_0 = tk.Label(self.frame, image="", bg='WHITE')
@@ -215,7 +215,7 @@ class RecommendationMovie:
                 # puts movies in a list
                 netflix_movies.append(df['title'].iloc[i])
                 
-            print(netflix_movies)
+            #print(netflix_movies)
             #search_movie = re.sub("\(.*?\)","",search_movie)
             #image_obj_0 = self.get_movie_poster(netflix_movies[0])
 
@@ -266,9 +266,16 @@ class RecommendationMovie:
             label.pack(side=tk.LEFT, padx=10)
 
     def show_recommended_movie(self):
+        # Delete previous movie posters every time the search button is pressed with a new search.
+        for previous_item in self.gallery_frame.winfo_children():
+            previous_item.destroy()
+
+        for previous_item in self.n_gallery_frame.winfo_children():
+            previous_item.destroy()
+
         # Display recommended movies in the Tkinter label
         recommended_movies = self.search()
-        recommended_movie = "Recommended by system using collaboraHve:\n"
+        recommended_movie = "Recommended by system using collaborative filtering:\n"
 
         movie_id = recommended_movies.iloc[0]["movieId"]
         
